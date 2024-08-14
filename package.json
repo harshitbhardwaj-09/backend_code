@@ -2,9 +2,10 @@
   "name": "sih_backend",
   "version": "1.0.0",
   "description": "api",
+  "type": "module",
   "main": "index.js",
   "scripts": {
-    "start": "node index.js"
+    "dev": "nodemon -r dotenv/config --experimental-json-modules src/index.js"
   },
   "keywords": [
     "node"
@@ -16,6 +17,8 @@
     "prettier": "^3.3.3"
   },
   "dependencies": {
+    "cookie-parser": "^1.4.6",
+    "cors": "^2.8.5",
     "dotenv": "^16.4.5",
     "express": "^4.19.2",
     "mongoose": "^8.5.3"
