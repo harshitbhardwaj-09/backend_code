@@ -1,40 +1,31 @@
 import mongoose, { Schema } from "mongoose";
-import mongooseAggregatePaginate from "mongoose-aggregate-paginate-v2";
+//import mongooseAggregatePaginate from "mongoose-aggregate-paginate-v2";
 
-const discussSchema = new Schema(
-  {
-    content: {
-      type: String,
+const discussionSchema = new Schema({
+  project: {
+      type: Schema.Types.ObjectId,
+      ref: 'Project',
       required: true,
-      maxlength: 1000, 
-    },
-    video: {
-      type: Schema.Types.ObjectId,
-      ref: "Video",
-      index: true, 
-    },
-    owner: {
-      type: Schema.Types.ObjectId,
-      ref: "User",
-      index: true, 
-    },
-    parent: {
-      type: Schema.Types.ObjectId,
-      ref: "Discuss", 
-      default: null,
-    },
-    status: {
-      type: String,
-      enum: ["active", "deleted", "flagged"],
-      default: "active",
-    },
   },
+  participants: [{
+      type: Schema.Types.ObjectId,
+      ref: 'User',
+  }],
+  messages: [{
+      type: Schema.Types.ObjectId,
+      ref: 'Message',
+  }],
+  createdAt: {
+      type: Date,
+      default: Date.now,
+  },
+},
   {
     timestamps: true,
   }
 );
 
-discussSchema.plugin(mongooseAggregatePaginate);
-discussSchema.index({ content: "text" }); 
+// discussionSchema.plugin(mongooseAggregatePaginate);
+// discussionSchema.index({ content: "text" }); 
 
-export const Discuss = mongoose.model("Discuss", discussSchema);
+export const Discuss = mongoose.model("Discuss", discussionSchema);

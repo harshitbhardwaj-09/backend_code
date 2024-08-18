@@ -7,21 +7,25 @@ const projectSchema = new Schema({
     },
     description: String,
     departments: [{
-        type: mongoose.Schema.Types.ObjectId,
+        type: Schema.Types.ObjectId,
         ref: 'Department',
     }],
     projectAdmin: {
-        type: mongoose.Schema.Types.ObjectId,
+        type: Schema.Types.ObjectId,
         ref: 'User',
         required: true,
     },
     workers: [{
-        type: mongoose.Schema.Types.ObjectId,
+        type: Schema.Types.ObjectId,
         ref: 'User',
     }],
     tasks: [{
-        type: mongoose.Schema.Types.ObjectId,
+        type: Schema.Types.ObjectId,
         ref: 'Task',
+    }],
+    discussions: [{
+        type: Schema.Types.ObjectId,
+        ref: 'Discussion',
     }]
 });
 
