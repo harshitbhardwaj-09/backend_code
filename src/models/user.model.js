@@ -31,8 +31,23 @@ const userSchema = new Schema(
         },
         refreshToken: {
             type: String
-        }
-
+        },
+        role: {
+            type: String,
+            enum: ['Main Admin', 'Project Admin', 'Worker'],
+            required: true,
+        },
+        department: {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: 'Department',
+            required: function() {
+                return this.role !== 'Main Admin';
+            }
+        },
+        assignedProjects: [{
+            type: mongoose.Schema.Types.ObjectId,
+            ref: 'Project',
+        }]
     },
     {
         timestamps: true
