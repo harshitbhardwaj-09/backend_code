@@ -50,7 +50,9 @@ const registerUser = asyncHandler( async (req, res) => {
         fullName,
         email, 
         password,
-        username: username.toLowerCase()
+        username: username.toLowerCase(),
+        role,
+        department: role !== 'Main Admin' ? departmentId : null,
     })
 
     const createdUser = await User.findById(user._id).select(
