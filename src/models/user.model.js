@@ -35,7 +35,7 @@ const userSchema = new Schema(
         role: {
             type: String,
             enum: ['Main Admin', 'Project Admin', 'Worker'],
-            required: true,
+            required: true
         },
         department: {
             type: mongoose.Schema.Types.ObjectId,
@@ -47,7 +47,8 @@ const userSchema = new Schema(
         assignedProjects: [{
             type: mongoose.Schema.Types.ObjectId,
             ref: 'Project',
-        }]
+        }],
+        // past project implementTION
     },
     {
         timestamps: true

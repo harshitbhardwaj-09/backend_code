@@ -1,30 +1,21 @@
-import { Router } from "express";
-import { 
-    loginUser, 
-    logoutUser, 
-    registerUser, 
-    refreshAccessToken, 
-    changeCurrentPassword, 
-    getCurrentUser,
-    updateAccountDetails
-} from "../controllers/user.controller.js";
-import { verifyJWT } from "../middlewares/auth.middleware.js";
+import express from 'express';
+import { getUsers, createUser, getUserById, updateUser, deleteUser } from '../controllers/userController.js';
 
+const router = express.Router();
 
-const router = Router()
+// Get all users
+router.get('/', getUsers);
 
-router.route("/register").post(
-    registerUser
-    )
+// Create a new user
+router.post('/', createUser);
 
-router.route("/login").post(loginUser)
+// Get a specific user by ID
+router.get('/:id', getUserById);
 
-//secured routes
-router.route("/logout").post(verifyJWT,  logoutUser)
-router.route("/refresh-token").post(refreshAccessToken)
-router.route("/change-password").post(verifyJWT, changeCurrentPassword)
-router.route("/current-user").get(verifyJWT, getCurrentUser)
-router.route("/update-account").patch(verifyJWT, updateAccountDetails)
-//router.post('/projects', createProject)
+// Update a user by ID
+router.put('/:id', updateUser);
 
-export default router
+// Delete a user by ID
+router.delete('/:id', deleteUser);
+
+export default router;

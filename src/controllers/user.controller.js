@@ -4,260 +4,91 @@ import { User} from "../models/user.model.js"
 import { ApiResponse } from "../utils/ApiResponse.js";
 import jwt from "jsonwebtoken"
 import mongoose from "mongoose"
+import User from '../models/User.js';
+import Project from '../models/Project.js';
 
-
-const generateAccessAndRefereshTokens = async(userId) =>{
+// Create a new user (worker, project admin, or main admin)
+export const createUser = async (req, res) => {
     try {
-        const user = await User.findById(userId)
-        const accessToken = user.generateAccessToken()
-        const refreshToken = user.generateRefreshToken()
+        const { name, email, password, role, departmentId } = req.body;
 
-        user.refreshToken = refreshToken
-        await user.save({ validateBeforeSave: false })
+        const newUser = new User({
+            name,
+            email,
+            password,
+            role,
+            department: role !== 'Main Admin' ? departmentId : null,
+        });
 
-        return {accessToken, refreshToken}
-
-
+        await newUser.save();
+        res.status(201).json(newUser);
     } catch (error) {
-        throw new ApiError(500, "Something went wrong while generating referesh and access token")
+        res.status(500).json({ error: 'Server error' });
     }
-}
+};
 
-const registerUser = asyncHandler( async (req, res) => {
-    
-
-    const {fullName, email, username, password } = req.body
-    
-
-    if (
-        [fullName, email, username, password].some((field) => field?.trim() === "")
-    ) {
-        throw new ApiError(400, "All fields are required")
-    }
-
-    const existedUser = await User.findOne({
-        $or: [{ username }, { email }]
-    })
-
-    if (existedUser) {
-        throw new ApiError(409, "User with email or username already exists")
-    }
-    
-    
-   
-
-    const user = await User.create({
-        fullName,
-        email, 
-        password,
-        username: username.toLowerCase(),
-        role,
-        department: role !== 'Main Admin' ? departmentId : null,
-    })
-
-    const createdUser = await User.findById(user._id).select(
-        "-password -refreshToken"
-    )
-
-    if (!createdUser) {
-        throw new ApiError(500, "Something went wrong while registering the user")
-    }
-
-    return res.status(201).json(
-        new ApiResponse(200, createdUser, "User registered Successfully")
-    )
-
-} )
-
-const loginUser = asyncHandler(async (req, res) =>{
-    
-
-    const {email, username, password} = req.body
-    console.log(email);
-
-    if (!username && !email) {
-        throw new ApiError(400, "username or email is required")
-    }
-    
-    
-
-    const user = await User.findOne({
-        $or: [{username}, {email}]
-    })
-
-    if (!user) {
-        throw new ApiError(404, "User does not exist")
-    }
-
-   const isPasswordValid = await user.isPasswordCorrect(password)
-
-   if (!isPasswordValid) {
-    throw new ApiError(401, "Invalid user credentials")
-    }
-
-   const {accessToken, refreshToken} = await generateAccessAndRefereshTokens(user._id)
-
-    const loggedInUser = await User.findById(user._id).select("-password -refreshToken")
-
-    const options = {
-        httpOnly: true,
-        secure: true
-    }
-
-    return res
-    .status(200)
-    .cookie("accessToken", accessToken, options)
-    .cookie("refreshToken", refreshToken, options)
-    .json(
-        new ApiResponse(
-            200, 
-            {
-                user: loggedInUser, accessToken, refreshToken
-            },
-            "User logged In Successfully"
-        )
-    )
-
-})
-
-const logoutUser = asyncHandler(async(req, res) => {
-    await User.findByIdAndUpdate(
-        req.user._id,
-        {
-            $unset: {
-                refreshToken: 1 // this removes the field from document
-            }
-        },
-        {
-            new: true
-        }
-    )
-
-    const options = {
-        httpOnly: true,
-        secure: true
-    }
-
-    return res
-    .status(200)
-    .clearCookie("accessToken", options)
-    .clearCookie("refreshToken", options)
-    .json(new ApiResponse(200, {}, "User logged Out"))
-})
-
-const refreshAccessToken = asyncHandler(async (req, res) => {
-    const incomingRefreshToken = req.cookies.refreshToken || req.body.refreshToken
-
-    if (!incomingRefreshToken) {
-        throw new ApiError(401, "unauthorized request")
-    }
-
+// Get all users (with optional role filtering)
+export const getAllUsers = async (req, res) => {
     try {
-        const decodedToken = jwt.verify(
-            incomingRefreshToken,
-            process.env.REFRESH_TOKEN_SECRET
-        )
-    
-        const user = await User.findById(decodedToken?._id)
-    
-        if (!user) {
-            throw new ApiError(401, "Invalid refresh token")
-        }
-    
-        if (incomingRefreshToken !== user?.refreshToken) {
-            throw new ApiError(401, "Refresh token is expired or used")
-            
-        }
-    
-        const options = {
-            httpOnly: true,
-            secure: true
-        }
-    
-        const {accessToken, newRefreshToken} = await generateAccessAndRefereshTokens(user._id)
-    
-        return res
-        .status(200)
-        .cookie("accessToken", accessToken, options)
-        .cookie("refreshToken", newRefreshToken, options)
-        .json(
-            new ApiResponse(
-                200, 
-                {accessToken, refreshToken: newRefreshToken},
-                "Access token refreshed"
-            )
-        )
+        const { role } = req.query;
+        const query = role ? { role } : {};
+
+        const users = await User.find(query).populate('department assignedProjects');
+        res.status(200).json(users);
     } catch (error) {
-        throw new ApiError(401, error?.message || "Invalid refresh token")
+        res.status(500).json({ error: 'Server error' });
     }
+};
 
-})
-
-const changeCurrentPassword = asyncHandler(async(req, res) => {
-    const {oldPassword, newPassword} = req.body
-
-    
-
-    const user = await User.findById(req.user?._id)
-    const isPasswordCorrect = await user.isPasswordCorrect(oldPassword)
-
-    if (!isPasswordCorrect) {
-        throw new ApiError(400, "Invalid old password")
+// Get a single user by ID
+export const getUserById = async (req, res) => {
+    try {
+        const user = await User.findById(req.params.id).populate('department assignedProjects');
+        if (!user) return res.status(404).json({ error: 'User not found' });
+        res.status(200).json(user);
+    } catch (error) {
+        res.status(500).json({ error: 'Server error' });
     }
+};
 
-    user.password = newPassword
-    await user.save({validateBeforeSave: false})
-
-    return res
-    .status(200)
-    .json(new ApiResponse(200, {}, "Password changed successfully"))
-})
-
-
-const getCurrentUser = asyncHandler(async(req, res) => {
-    return res
-    .status(200)
-    .json(new ApiResponse(
-        200,
-        req.user,
-        "User fetched successfully"
-    ))
-})
-
-const updateAccountDetails = asyncHandler(async(req, res) => {
-    const {fullName, email} = req.body
-
-    if (!fullName || !email) {
-        throw new ApiError(400, "All fields are required")
+// Update a user (e.g., change role, department)
+export const updateUser = async (req, res) => {
+    try {
+        const updatedUser = await User.findByIdAndUpdate(req.params.id, req.body, { new: true });
+        if (!updatedUser) return res.status(404).json({ error: 'User not found' });
+        res.status(200).json(updatedUser);
+    } catch (error) {
+        res.status(500).json({ error: 'Server error' });
     }
+};
 
-    const user = await User.findByIdAndUpdate(
-        req.user?._id,
-        {
-            $set: {
-                fullName,
-                email: email
-            }
-        },
-        {new: true}
-        
-    ).select("-password")
+// Delete a user
+export const deleteUser = async (req, res) => {
+    try {
+        const deletedUser = await User.findByIdAndDelete(req.params.id);
+        if (!deletedUser) return res.status(404).json({ error: 'User not found' });
+        res.status(200).json({ message: 'User deleted successfully' });
+    } catch (error) {
+        res.status(500).json({ error: 'Server error' });
+    }
+};
 
-    return res
-    .status(200)
-    .json(new ApiResponse(200, user, "Account details updated successfully"))
-});
+// Assign a project to a user (for project admins or workers)
+export const assignProjectToUser = async (req, res) => {
+    try {
+        const { userId, projectId } = req.body;
 
+        const user = await User.findById(userId);
+        if (!user) return res.status(404).json({ error: 'User not found' });
 
+        const project = await Project.findById(projectId);
+        if (!project) return res.status(404).json({ error: 'Project not found' });
 
+        user.assignedProjects.push(projectId);
+        await user.save();
 
-
-export {
-    registerUser,
-    loginUser,
-    logoutUser,
-    refreshAccessToken,
-    changeCurrentPassword,
-    getCurrentUser,
-    updateAccountDetails,
-}
+        res.status(200).json({ message: 'Project assigned to user successfully' });
+    } catch (error) {
+        res.status(500).json({ error: 'Server error' });
+    }
+};
