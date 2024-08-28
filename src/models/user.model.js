@@ -67,13 +67,20 @@ userSchema.methods.isPasswordCorrect = async function(password){
 }
 
 userSchema.methods.generateAccessToken = function(){
+    const payload = {
+        _id: this._id,
+        email: this.email,
+        username: this.username,
+        role: this.role,
+        fullName: this.fullName
+    };
+
+    // Conditionally add the department field if it exists
+    if (this.department) {
+        payload.department = this.department;
+    }
     return jwt.sign(
-        {
-            _id: this._id,
-            email: this.email,
-            username: this.username,
-            fullName: this.fullName
-        },
+        payload,
         process.env.ACCESS_TOKEN_SECRET,
         {
             expiresIn: process.env.ACCESS_TOKEN_EXPIRY
