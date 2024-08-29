@@ -1,4 +1,4 @@
-import { Discuss } from '../models/Discussion.js';
+import { Discuss } from '../models/discuss.model.js';
 
 export const createDiscussion = async (req, res) => {
     try {

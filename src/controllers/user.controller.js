@@ -1,9 +1,10 @@
-import { User } from '../models/User.js';
+import { User } from '../models/user.model.js';
 import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
 import { asyncHandler } from "../utils/asyncHandler.js";
 import { ApiError } from "../utils/ApiError.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
+import {Project} from "../models/project.model.js"
 
 
 
@@ -24,7 +25,7 @@ const generateAccessAndRefreshToken = async (userId) => {
 
 export const registerUser = asyncHandler(async (req, res) => {
     try {
-        const { username, email, fullName, password, role, department } = req.body;
+        const { username, email, fullName, password, role, departmentId } = req.body;
         if (
             [fullName, email, username, password, role].some((field) =>
                 field?.trim() === "")
@@ -37,10 +38,9 @@ export const registerUser = asyncHandler(async (req, res) => {
         if (existedUser) {
             throw new ApiError(409, "user with username and email already exist");
         }
-        if (password.length < 8) {
-            return res.status(400).json({ msg: 'failed' })
-        }
-        const user = new User({ username, email, fullName, password, role, department });
+        const user = new User({ username, email, fullName, password, role,
+            department: role !== 'Main Admin' ? departmentId : null,
+         });
         await user.save();
         res.status(201).json({ message: "User registered successfully", user });
     } catch (error) {
@@ -51,6 +51,29 @@ export const registerUser = asyncHandler(async (req, res) => {
         }
     }
 });
+
+
+export const getUserById = async (req, res) => {
+    try {
+        const user = await User.findById(req.params.id).populate('department assignedProjects');
+        if (!user) return res.status(404).json({ error: 'User not found' });
+        res.status(200).json(user);
+    } catch (error) {
+        res.status(500).json({ error: 'Server error' });
+    }
+};
+
+export const getAllUsers = async (req, res) => {
+    try {
+        const { role } = req.query;
+        const query = role ? { role } : {};
+
+        const users = await User.find(query).populate('department assignedProjects');
+        res.status(200).json(users);
+    } catch (error) {
+        res.status(500).json({ error: 'Server error' });
+    }
+};
 
 export const loginUser = asyncHandler(async (req, res) => {
     const { email, username, password } = req.body;
@@ -142,6 +165,47 @@ export const refreshAccessToken = asyncHandler(async (req, res) => {
 //         res.status(500).json({ message: "Error updating user", error });
 //     }
 // })
+
+export const logoutUser=asyncHandler(async(req,res)=>{
+    await User.findByIdAndUpdate(
+        req.user._id,
+        {
+            $set:{
+                refreshToken:undefined
+            }
+        },
+        {
+            new:true
+        }
+    )
+    const options={
+        httpOnly:true,
+        secure:true
+    }
+    return res.status(200)
+    .clearCookie("accessToken",options)
+    .clearCookie("refreshToken",options)
+    .json(new ApiResponse(200,{},"User logged out"))
+})
+
+export const assignProjectToUser = async (req, res) => {
+    try {
+        const { userId, projectId } = req.body;
+
+        const user = await User.findById(userId);
+        if (!user) return res.status(404).json({ error: 'User not found' });
+
+        const project = await Project.findById(projectId);
+        if (!project) return res.status(404).json({ error: 'Project not found' });
+
+        user.assignedProjects.push(projectId);
+        await user.save();
+
+        res.status(200).json({ message: 'Project assigned to user successfully' });
+    } catch (error) {
+        res.status(500).json({ error: 'Server error' });
+    }
+};
 
 export const deleteUser = async (req, res) => {
     try {

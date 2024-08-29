@@ -1,13 +1,27 @@
-import { Project } from '../models/Project.js';
+import { Project } from '../models/project.model.js';
+import {User} from '../models/user.model.js'
 
 export const createProject = async (req, res) => {
     try {
-        const { name, description, departments, projectAdmin, workers } = req.body;
-        const project = new Project({ name, description, departments, projectAdmin, workers });
-        await project.save();
-        res.status(201).json({ message: "Project created successfully", project });
+        const { name, description, departments, projectAdminId, workerIds } = req.body;
+
+        const projectAdmin = await User.findById(projectAdminId);
+        if (!projectAdmin) return res.status(404).json({ error: 'Project admin not found' });
+
+        const workers = await User.find({ _id: { $in: workerIds } });
+        
+        const newProject = new Project({
+            name,
+            description,
+            departments,
+            projectAdmin: projectAdminId,
+            workers: workerIds,
+        });
+
+        await newProject.save();
+        res.status(201).json(newProject);
     } catch (error) {
-        res.status(500).json({ message: "Error creating project", error });
+        res.status(500).json({ error: 'Server error' });
     }
 };
 
