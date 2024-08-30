@@ -1,10 +1,10 @@
 import { User } from '../models/user.model.js';
-import bcrypt from 'bcrypt';
+//import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
 import { asyncHandler } from "../utils/asyncHandler.js";
 import { ApiError } from "../utils/ApiError.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
-import {Project} from "../models/project.model.js"
+//import {Project} from "../models/project.model.js"
 
 
 
@@ -188,24 +188,24 @@ export const logoutUser=asyncHandler(async(req,res)=>{
     .json(new ApiResponse(200,{},"User logged out"))
 })
 
-export const assignProjectToUser = async (req, res) => {
-    try {
-        const { userId, projectId } = req.body;
+// export const assignProjectToUser = async (req, res) => {
+//     try {
+//         const { userId, projectId } = req.body;
 
-        const user = await User.findById(userId);
-        if (!user) return res.status(404).json({ error: 'User not found' });
+//         const user = await User.findById(userId);
+//         if (!user) return res.status(404).json({ error: 'User not found' });
 
-        const project = await Project.findById(projectId);
-        if (!project) return res.status(404).json({ error: 'Project not found' });
+//         const project = await Project.findById(projectId);
+//         if (!project) return res.status(404).json({ error: 'Project not found' });
 
-        user.assignedProjects.push(projectId);
-        await user.save();
+//         user.assignedProjects.push(projectId);
+//         await user.save();
 
-        res.status(200).json({ message: 'Project assigned to user successfully' });
-    } catch (error) {
-        res.status(500).json({ error: 'Server error' });
-    }
-};
+//         res.status(200).json({ message: 'Project assigned to user successfully' });
+//     } catch (error) {
+//         res.status(500).json({ error: 'Server error' });
+//     }
+// };
 
 export const deleteUser = async (req, res) => {
     try {

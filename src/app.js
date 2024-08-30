@@ -14,4 +14,9 @@ app.use(express.urlencoded({extended: true, limit: "16kb"}))
 app.use(express.static("public"))
 app.use(cookieParser())
 
+import authRouter from './routes/auth.js'
+
+
+app.use("/admin",authRouter);
+
 export { app }
