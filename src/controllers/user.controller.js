@@ -1,5 +1,5 @@
 import { User } from '../models/user.model.js';
-//import bcrypt from 'bcrypt';
+import bcryptjs from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import { asyncHandler } from "../utils/asyncHandler.js";
 import { ApiError } from "../utils/ApiError.js";
@@ -23,36 +23,59 @@ const generateAccessAndRefreshToken = async (userId) => {
     }
 }
 
-export const registerUser = asyncHandler(async (req, res) => {
-    try {
-        const { username, email, fullName, password, role, departmentId } = req.body;
-        if (
-            [fullName, email, username, password, role].some((field) =>
-                field?.trim() === "")
-        ) {
-            throw new ApiError(400, "All fields are required");
-        }
-        const existedUser = await User.findOne({
-            $or: [{ username }, { email }]
-        })
-        if (existedUser) {
-            throw new ApiError(409, "user with username and email already exist");
-        }
-        const user = new User({ username, email, fullName, password, role,
-            department: role !== 'Main Admin' ? departmentId : null,
-         });
-        await user.save();
-        res.status(201).json({ message: "User registered successfully", user });
-    } catch (error) {
-        if (error instanceof ApiError) {
-            res.status(error.statusCode).json({ message: error.message });
-        } else {
-            res.status(500).json({ message: "Error registering user", error });
-        }
+export const registerUser = asyncHandler( async (req, res) => {
+    // get user details from frontend
+    // validation - not empty
+    // check if user already exists: username, email
+    // create user object - create entry in db
+    // remove password and refresh token field from response
+    // check for user creation
+    // return res
+
+
+    const {fullName, email, username, password,department,role } = req.body
+    //console.log("email: ", email);
+    console.log("Request Body:",req.body);
+
+    if (
+        [fullName, email, username, password,role].some((field) => field?.trim() === "")
+    ) {
+        throw new ApiError(400, "All fields are required")
     }
-});
 
+    const existedUser = await User.findOne({
+        $or: [{ username }, { email }]
+    })
 
+    if (existedUser) {
+        throw new ApiError(409, "User with email or username already exists")
+    }
+    //console.log(req.files);
+
+    
+    const user = await User.create({
+        fullName,
+        email, 
+        password,
+        username,
+        role,
+        department: role !== 'Main Admin' ? department : null
+    })
+
+    const createdUser = await User.findById(user._id).select(
+        "-password -refreshToken"
+    )
+
+    if (!createdUser) {
+        throw new ApiError(500, "Something went wrong while registering the user")
+    }
+
+    return res.status(201).json(
+        new ApiResponse(200, createdUser, "User registered Successfully")
+    )
+
+} )
+  
 export const getUserById = async (req, res) => {
     try {
         const user = await User.findById(req.params.id).populate('department assignedProjects');

@@ -16,7 +16,7 @@ const userSchema = new Schema(
             type: String,
             required: true,
             unique: true,
-            lowecase: true,
+            lowercase: true,
             trim: true, 
         },
         fullName: {
@@ -38,12 +38,12 @@ const userSchema = new Schema(
             required: true
         },
         department: {
-            type: mongoose.Schema.Types.ObjectId,
-            ref: 'Department',
+            type: String,
+           // ref: 'Department',
             required: function() {
                 return this.role !== 'Main Admin';
-            }
-        }
+            },
+        },
         // assignedProjects: [{
         //     type: mongoose.Schema.Types.ObjectId,
         //     ref: 'Project',
