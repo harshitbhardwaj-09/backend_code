@@ -43,7 +43,7 @@ const userSchema = new Schema(
             required: function() {
                 return this.role !== 'Main Admin';
             },
-        },
+        }
         // assignedProjects: [{
         //     type: mongoose.Schema.Types.ObjectId,
         //     ref: 'Project',

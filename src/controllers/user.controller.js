@@ -5,8 +5,10 @@ import { asyncHandler } from "../utils/asyncHandler.js";
 import { ApiError } from "../utils/ApiError.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
 //import {Project} from "../models/project.model.js"
+import multer from "multer";
 
 
+const upload = multer(); // Initialize multer
 
 
 const generateAccessAndRefreshToken = async (userId) => {
@@ -23,17 +25,9 @@ const generateAccessAndRefreshToken = async (userId) => {
     }
 }
 
-export const registerUser = asyncHandler( async (req, res) => {
-    // get user details from frontend
-    // validation - not empty
-    // check if user already exists: username, email
-    // create user object - create entry in db
-    // remove password and refresh token field from response
-    // check for user creation
-    // return res
-
-
-    const {fullName, email, username, password,department,role } = req.body
+export const registerUser = asyncHandler(
+    async (req, res) => {
+    const { fullName, email, username, password,department,role } = req.body
     //console.log("email: ", email);
     console.log("Request Body:",req.body);
 
@@ -75,6 +69,8 @@ export const registerUser = asyncHandler( async (req, res) => {
     )
 
 } )
+
+
   
 export const getUserById = async (req, res) => {
     try {
