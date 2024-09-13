@@ -64,7 +64,6 @@ export const getProjects = async (req, res) => {
 };
 
 export const getProjectById = async (req, res) => {
-    try{
         console.log(req);
         const { id } = req.query;
         const project = await Project.findById(id);
@@ -72,9 +71,4 @@ export const getProjectById = async (req, res) => {
             return res.status(404).json({ message: "Project not found" });        
         }
         res.status(200).json({project} );
-    }
-        catch(error){
-           console.log();
-        }
-   
 };
