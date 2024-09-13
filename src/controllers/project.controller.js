@@ -45,6 +45,7 @@ export const updateProject = async (req, res) => {
 
 export const deleteProject = async (req, res) => {
     try {
+        console.log(req);
         const { projectId } = req.params;
         await Project.findByIdAndDelete(projectId);
         res.json({ message: "Project deleted successfully" });
@@ -55,9 +56,25 @@ export const deleteProject = async (req, res) => {
 
 export const getProjects = async (req, res) => {
     try {
-        const projects = await Project.find().populate('departments').populate('projectAdmin').populate('workers');
+        const projects = await Project.find().populate('projectAdmin').populate('workers');
         res.json({ projects });
     } catch (error) {
         res.status(500).json({ message: "Error fetching projects", error });
     }
+};
+
+export const getProjectById = async (req, res) => {
+    try{
+        console.log(req);
+        const { id } = req.query;
+        const project = await Project.findById(id);
+        if (!project) {
+            return res.status(404).json({ message: "Project not found" });        
+        }
+        res.status(200).json({project} );
+    }
+        catch(error){
+           console.log();
+        }
+   
 };
