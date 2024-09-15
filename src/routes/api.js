@@ -1,7 +1,7 @@
 import { Router } from "express";
 //import { assignProjectToUser,getAllUsers,getUserById } from "../controllers/user.controller.js";
 import { createProject,getProjects,deleteProject,updateProject, getProjectById } from "../controllers/project.controller.js";
-//import { createTask,getTasks,updateTask,deleteTask } from "../controllers/tasks.controller.js";
+import { createTask,getTaskById,getTasks,updateTask,deleteTask } from "../controllers/tasks.controller.js";
 //import { createMessage,deleteMessage,getMessageById,getMessagesByDiscussion } from "../controllers/message.controller.js";
 //import { createDiscussion,getDiscussions,addMessage } from "../controllers/discussion.controller";
 import { authorizeRoles } from "../middlewares/auth.middleware.js"
@@ -37,6 +37,16 @@ router.route('/getprojectbyid').get(
 )
 router.route('/deleteprojectbyid').delete(
     deleteProject
+)
+router.route('updateproject').patch(
+    updateProject
+)
+
+router.route('/project/task').post(
+    createTask
+)
+router.route('/project/getTaskById').get(
+    getTaskById
 )
 // router.route('/project/task').post(
 //     authorizeRoles('Project Admin'),

@@ -44,10 +44,10 @@ const userSchema = new Schema(
                 return this.role !== 'Main Admin';
             },
         },
-        assignedProjects: [{
-            type: mongoose.Schema.Types.ObjectId,
-            ref: 'Project',
-        }],
+        // assignedProjects: [{
+        //     type: mongoose.Schema.Types.ObjectId,
+        //     ref: 'Project',
+        // }],
         // past project implementTION
     },
     {
