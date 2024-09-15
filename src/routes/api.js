@@ -28,9 +28,9 @@ router.route("/project").post(
     createProject
 )
 
-router.route('/getProject').get(
-    getProjects
-)
+// router.route('/getProject').get(
+//     getProjects
+// )
 
 router.route('/getprojectbyid').get(
     getProjectById
@@ -48,6 +48,10 @@ router.route('/project/task').post(
 router.route('/project/getTaskById').get(
     getTaskById
 )
+
+// router.route('/project/getAllTasks').get(
+//     getTasksByProjectId
+// )
 // router.route('/project/task').post(
 //     authorizeRoles('Project Admin'),
 //     createTask
