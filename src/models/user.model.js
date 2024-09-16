@@ -39,7 +39,7 @@ const userSchema = new Schema(
         },
         department: {
             type: String,
-           // ref: 'Department',
+            //ref: 'Department',
             required: function() {
                 return this.role !== 'Main Admin';
             },
