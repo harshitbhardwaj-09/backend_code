@@ -89,3 +89,28 @@ export const getProjectById = async (req, res) => {
         }
         res.status(200).json({project} );
 };
+
+export const getAllTasksByProjectId = asyncHandler(async (req, res) => {
+    try {
+        const { projectId } = req.params;
+
+        const project = await Project.aggregate([
+            { $match: { _id: mongoose.Types.ObjectId(projectId) } },
+            { $lookup: {
+                from: 'tasks',
+                localField: 'tasks',
+                foreignField: '_id',
+                as: 'tasks'
+            }},
+            { $project: { tasks: 1, _id: 0 } }
+        ]);
+
+        if (!project || project.length === 0) {
+            return res.status(404).json({ error: 'Project not found' });
+        }
+
+        res.status(200).json(project[0].tasks);
+    } catch (error) {
+        res.status(500).json({ error: 'Server error' });
+    }
+});
