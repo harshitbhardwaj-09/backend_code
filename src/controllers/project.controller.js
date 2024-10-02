@@ -1,3 +1,4 @@
+import mongoose from 'mongoose';
 import { Project } from '../models/project.model.js';
 import {User} from '../models/user.model.js';
 import {Task} from '../models/tasks.model.js';
@@ -90,12 +91,18 @@ export const getProjectById = async (req, res) => {
         res.status(200).json({project} );
 };
 
-export const getAllTasksByProjectId = asyncHandler(async (req, res) => {
+export const getAllTasksByProjectId = async (req, res) => {
     try {
+        
         const { projectId } = req.params;
 
+        console.log(req);
+
+        if (!mongoose.Types.ObjectId.isValid(projectId)) {
+            return res.status(400).json({ error: 'Invalid project ID' });
+        }
         const project = await Project.aggregate([
-            { $match: { _id: mongoose.Types.ObjectId(projectId) } },
+            { $match: { _id: new mongoose.Types.ObjectId(projectId) } },
             { $lookup: {
                 from: 'tasks',
                 localField: 'tasks',
@@ -111,6 +118,7 @@ export const getAllTasksByProjectId = asyncHandler(async (req, res) => {
 
         res.status(200).json(project[0].tasks);
     } catch (error) {
+        console.log(error);
         res.status(500).json({ error: 'Server error' });
     }
-});
+};
